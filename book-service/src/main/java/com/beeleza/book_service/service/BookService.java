@@ -6,6 +6,7 @@ import com.beeleza.book_service.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    public BookDTO findById(Long id) {
+    public BookDTO findById(UUID id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
         return toDTO(book);
@@ -40,7 +41,7 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    public BookDTO update(Long id, BookDTO dto) {
+    public BookDTO update(UUID id, BookDTO dto) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
 

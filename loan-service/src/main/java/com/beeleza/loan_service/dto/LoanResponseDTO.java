@@ -1,46 +1,29 @@
-package com.beeleza.loan_service.domain;
+package com.beeleza.loan_service.dto;
 
-import jakarta.persistence.*;
+import com.beeleza.loan_service.domain.Loan;
+import com.beeleza.loan_service.domain.LoanStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity
-@Table(name = "loans")
-public class Loan {
+public class LoanResponseDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Column(nullable = false)
     private UUID userId;
-
-    @Column(nullable = false)
     private UUID bookId;
-
-    @Column(nullable = false)
     private LocalDate loanDate;
-
-    @Column(nullable = false)
     private LocalDate expectedReturnDate;
-
     private LocalDate returnDate;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     private LoanStatus status;
-
-    @Column(nullable = false)
     private BigDecimal fine;
 
-    public Loan() {
+    public LoanResponseDTO() {
     }
 
-    public Loan(UUID id, UUID userId, UUID bookId, LocalDate loanDate,
-                LocalDate expectedReturnDate, LocalDate returnDate,
-                LoanStatus status, BigDecimal fine) {
+    public LoanResponseDTO(UUID id, UUID userId, UUID bookId, LocalDate loanDate,
+                           LocalDate expectedReturnDate, LocalDate returnDate,
+                           LoanStatus status, BigDecimal fine) {
         this.id = id;
         this.userId = userId;
         this.bookId = bookId;
@@ -49,6 +32,19 @@ public class Loan {
         this.returnDate = returnDate;
         this.status = status;
         this.fine = fine;
+    }
+
+    public static LoanResponseDTO fromEntity(Loan loan) {
+        return new LoanResponseDTO(
+                loan.getId(),
+                loan.getUserId(),
+                loan.getBookId(),
+                loan.getLoanDate(),
+                loan.getExpectedReturnDate(),
+                loan.getReturnDate(),
+                loan.getStatus(),
+                loan.getFine()
+        );
     }
 
     public UUID getId() {

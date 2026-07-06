@@ -1,8 +1,10 @@
 package com.beeleza.book_service.dto;
 
+import java.util.UUID;
+
 public class BookDTO {
 
-    private Long id;
+    private UUID id;
     private String title;
     private String author;
     private String isbn;
@@ -11,7 +13,7 @@ public class BookDTO {
     public BookDTO() {
     }
 
-    public BookDTO(Long id, String title, String author, String isbn, Integer availableQuantity) {
+    public BookDTO(UUID id, String title, String author, String isbn, Integer availableQuantity) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -19,11 +21,11 @@ public class BookDTO {
         this.availableQuantity = availableQuantity;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

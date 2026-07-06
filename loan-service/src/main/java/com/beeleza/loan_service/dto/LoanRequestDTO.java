@@ -1,62 +1,38 @@
-package com.beeleza.loan_service.domain;
+package com.beeleza.loan_service.dto;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity
-@Table(name = "loans")
-public class Loan {
+public class LoanRequestDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(nullable = false)
+    @NotNull
     private UUID userId;
 
-    @Column(nullable = false)
+    @NotNull
     private UUID bookId;
 
-    @Column(nullable = false)
     private LocalDate loanDate;
 
-    @Column(nullable = false)
+    @NotNull
+    @Future
     private LocalDate expectedReturnDate;
 
-    private LocalDate returnDate;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private LoanStatus status;
-
-    @Column(nullable = false)
     private BigDecimal fine;
 
-    public Loan() {
+    public LoanRequestDTO() {
     }
 
-    public Loan(UUID id, UUID userId, UUID bookId, LocalDate loanDate,
-                LocalDate expectedReturnDate, LocalDate returnDate,
-                LoanStatus status, BigDecimal fine) {
-        this.id = id;
+    public LoanRequestDTO(UUID userId, UUID bookId, LocalDate loanDate,
+                          LocalDate expectedReturnDate, BigDecimal fine) {
         this.userId = userId;
         this.bookId = bookId;
         this.loanDate = loanDate;
         this.expectedReturnDate = expectedReturnDate;
-        this.returnDate = returnDate;
-        this.status = status;
         this.fine = fine;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
     }
 
     public UUID getUserId() {
@@ -89,22 +65,6 @@ public class Loan {
 
     public void setExpectedReturnDate(LocalDate expectedReturnDate) {
         this.expectedReturnDate = expectedReturnDate;
-    }
-
-    public LocalDate getReturnDate() {
-        return returnDate;
-    }
-
-    public void setReturnDate(LocalDate returnDate) {
-        this.returnDate = returnDate;
-    }
-
-    public LoanStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LoanStatus status) {
-        this.status = status;
     }
 
     public BigDecimal getFine() {

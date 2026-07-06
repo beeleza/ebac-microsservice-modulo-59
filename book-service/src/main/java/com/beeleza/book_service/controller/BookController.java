@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/books")
@@ -33,12 +34,12 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookDTO> findById(@PathVariable Long id) {
+    public ResponseEntity<BookDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(bookService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookDTO> update(@PathVariable Long id, @RequestBody BookDTO dto) {
+    public ResponseEntity<BookDTO> update(@PathVariable UUID id, @RequestBody BookDTO dto) {
         return ResponseEntity.ok(bookService.update(id, dto));
     }
 
