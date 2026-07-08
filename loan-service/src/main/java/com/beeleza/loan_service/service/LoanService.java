@@ -8,6 +8,7 @@ import com.beeleza.loan_service.dto.NotificationRequestDTO;
 import com.beeleza.loan_service.repository.LoanRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -30,10 +32,12 @@ public class LoanService {
 
     private final LoanRepository repository;
     private final WebClient webClient;
+    private final CircuitBreakerFactory circuitBreakerFactory;
 
-    public LoanService(LoanRepository repository, WebClient webClient) {
+    public LoanService(LoanRepository repository, WebClient webClient, CircuitBreakerFactory circuitBreakerFactory) {
         this.repository = repository;
         this.webClient = webClient;
+        this.circuitBreakerFactory = circuitBreakerFactory;
     }
 
     public LoanResponseDTO create(LoanRequestDTO request) {
@@ -129,44 +133,69 @@ public class LoanService {
     }
 
     private void validateUserExists(UUID userId) {
-        try {
-            webClient.get()
-                    .uri("http://localhost:8080/api/users/{id}", userId)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-        } catch (WebClientResponseException e) {
-            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId);
-            }
-            throw new ResponseStatusException(e.getStatusCode(), "Error validating user", e);
-        }
+        circuitBreakerFactory.create("usersService").run(
+                () -> {
+                    webClient.get()
+                            .uri("http://users-service/api/users/{id}", userId)
+                            .retrieve()
+                            .toBodilessEntity()
+                            .block();
+                    return null;
+                },
+                throwable -> {
+                    if (throwable instanceof WebClientResponseException e) {
+                        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId);
+                        }
+                        throw new ResponseStatusException(e.getStatusCode(), "Error validating user", e);
+                    }
+                    log.error("users-service indisponível: {}", throwable.getMessage());
+                    throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                            "User service temporarily unavailable");
+                }
+        );
     }
 
     private void validateBookExists(UUID bookId) {
-        try {
-            webClient.get()
-                    .uri("http://localhost:8081/api/books/{id}", bookId)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-        } catch (WebClientResponseException e) {
-            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found: " + bookId);
-            }
-            throw new ResponseStatusException(e.getStatusCode(), "Error validating book", e);
-        }
+        circuitBreakerFactory.create("booksService").run(
+                () -> {
+                    webClient.get()
+                            .uri("http://book-service/api/books/{id}", bookId)
+                            .retrieve()
+                            .toBodilessEntity()
+                            .block();
+                    return null;
+                },
+                throwable -> {
+                    if (throwable instanceof WebClientResponseException e) {
+                        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found: " + bookId);
+                        }
+                        throw new ResponseStatusException(e.getStatusCode(), "Error validating book", e);
+                    }
+                    log.error("book-service indisponível: {}", throwable.getMessage());
+                    throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                            "Book service temporarily unavailable");
+                }
+        );
     }
 
     private void sendNotification(NotificationRequestDTO request) {
-        webClient.post()
-                .uri("http://localhost:8083/api/notifications")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(String.class)
-                .subscribe(
-                        response -> log.info("Notificação enviada com sucesso: {}", response),
-                        error -> log.error("Erro ao enviar notificação: {}", error.getMessage(), error)
-                );
+        circuitBreakerFactory.create("notificationsService").run(
+                () -> {
+                    webClient.post()
+                            .uri("http://notifications-service/api/notifications")
+                            .bodyValue(request)
+                            .retrieve()
+                            .bodyToMono(String.class)
+                            .block(Duration.ofSeconds(5));
+                    return null;
+                },
+                throwable -> {
+                    log.warn("notifications-service indisponível, notificação ignorada: {}",
+                            throwable.getMessage());
+                    return null;
+                }
+        );
     }
 }
