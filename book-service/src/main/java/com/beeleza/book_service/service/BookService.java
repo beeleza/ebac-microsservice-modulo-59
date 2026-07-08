@@ -3,7 +3,9 @@ package com.beeleza.book_service.service;
 import com.beeleza.book_service.domain.model.Book;
 import com.beeleza.book_service.dto.BookDTO;
 import com.beeleza.book_service.repository.BookRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +33,7 @@ public class BookService {
 
     public BookDTO findById(UUID id) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found with id: " + id));
         return toDTO(book);
     }
 
@@ -43,7 +45,7 @@ public class BookService {
 
     public BookDTO update(UUID id, BookDTO dto) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found with id: " + id));
 
         book.setTitle(dto.getTitle());
         book.setAuthor(dto.getAuthor());

@@ -8,6 +8,7 @@ import com.beeleza.loan_service.repository.LoanRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -126,8 +127,11 @@ public class LoanService {
                     .retrieve()
                     .toBodilessEntity()
                     .block();
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found: " + userId);
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId);
+            }
+            throw new ResponseStatusException(e.getStatusCode(), "Error validating user", e);
         }
     }
 
@@ -138,8 +142,11 @@ public class LoanService {
                     .retrieve()
                     .toBodilessEntity()
                     .block();
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book not found: " + bookId);
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found: " + bookId);
+            }
+            throw new ResponseStatusException(e.getStatusCode(), "Error validating book", e);
         }
     }
 }
