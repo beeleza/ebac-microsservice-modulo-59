@@ -4,7 +4,10 @@ import com.beeleza.loan_service.domain.Loan;
 import com.beeleza.loan_service.domain.LoanStatus;
 import com.beeleza.loan_service.dto.LoanRequestDTO;
 import com.beeleza.loan_service.dto.LoanResponseDTO;
+import com.beeleza.loan_service.dto.NotificationRequestDTO;
 import com.beeleza.loan_service.repository.LoanRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +25,7 @@ import java.util.UUID;
 @Service
 public class LoanService {
 
+    private static final Logger log = LoggerFactory.getLogger(LoanService.class);
     private static final BigDecimal DAILY_FINE_RATE = new BigDecimal("1.50");
 
     private final LoanRepository repository;
@@ -42,6 +47,9 @@ public class LoanService {
         loan.setExpectedReturnDate(request.getExpectedReturnDate());
         loan.setStatus(LoanStatus.ACTIVE);
         loan.setFine(BigDecimal.ZERO);
+
+        String message = String.format("Empréstimo realizado - Livro: %s para o usuário: %s", request.getBookId(), request.getUserId());
+        sendNotification(new NotificationRequestDTO(message, LocalDateTime.now()));
 
         return LoanResponseDTO.fromEntity(repository.save(loan));
     }
@@ -148,5 +156,17 @@ public class LoanService {
             }
             throw new ResponseStatusException(e.getStatusCode(), "Error validating book", e);
         }
+    }
+
+    private void sendNotification(NotificationRequestDTO request) {
+        webClient.post()
+                .uri("http://localhost:8083/api/notifications")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(
+                        response -> log.info("Notificação enviada com sucesso: {}", response),
+                        error -> log.error("Erro ao enviar notificação: {}", error.getMessage(), error)
+                );
     }
 }
