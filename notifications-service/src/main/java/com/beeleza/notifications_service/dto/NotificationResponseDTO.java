@@ -1,27 +1,31 @@
-package com.beeleza.notifications_service.domain;
+package com.beeleza.notifications_service.dto;
 
-import jakarta.persistence.*;
+import com.beeleza.notifications_service.domain.Notification;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "notifications")
-public class Notification {
+public class NotificationResponseDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String message;
     private LocalDateTime sendAt;
 
-    public Notification() {
+    public NotificationResponseDTO() {
     }
 
-    public Notification(UUID id, String message, LocalDateTime sendAt) {
+    public NotificationResponseDTO(UUID id, String message, LocalDateTime sendAt) {
         this.id = id;
         this.message = message;
         this.sendAt = sendAt;
+    }
+
+    public static NotificationResponseDTO fromEntity(Notification notification) {
+        return new NotificationResponseDTO(
+                notification.getId(),
+                notification.getMessage(),
+                notification.getSendAt()
+        );
     }
 
     public UUID getId() {
