@@ -14,6 +14,7 @@ Arquitetura de microsserviços com Spring Boot, Eureka, PostgreSQL e Flyway.
 | `users-service` | `8080` | `users_service` | `5432` |
 | `book-service` | `8081` | `books_service` | `5433` |
 | `loan-service` | `8082` | `loans_service` | `5434` |
+| `notifications-service` | `8083` | `notifications_service` | `5435` |
 
 ---
 
@@ -94,6 +95,25 @@ Arquitetura de microsserviços com Spring Boot, Eureka, PostgreSQL e Flyway.
 
 ---
 
+### notifications-service
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/api/notifications` | Criar/enviar notificação |
+| `GET` | `/api/notifications` | Listar todas as notificações |
+
+**Request body (POST)**:
+```json
+{
+  "message": "Empréstimo realizado - Livro: uuid para o usuário: uuid",
+  "sendAt": "2026-07-08T12:00:00"
+}
+```
+
+> Integrado com o `loan-service`: ao criar um empréstimo, uma notificação é enviada automaticamente para este serviço.
+
+---
+
 ## Como executar
 
 1. Iniciar o discovery-server:
@@ -105,6 +125,7 @@ Arquitetura de microsserviços com Spring Boot, Eureka, PostgreSQL e Flyway.
    cd users-service && mvn spring-boot:run
    cd book-service && mvn spring-boot:run
    cd loan-service && mvn spring-boot:run
+   cd notifications-service && mvn spring-boot:run
    ```
 
 > Os bancos PostgreSQL podem ser iniciados via `docker-compose.yml` de cada serviço.
